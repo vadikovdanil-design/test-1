@@ -22,13 +22,14 @@ JWT_SECRET = "sag_for_people_hr_crm_jwt_secret_key_2026_super_secure"
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "sag_hr.db")
 
-# Telegram Bot Integration
+# Telegram Bot & WebApp Integration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8581057434:AAEeT1h-CFJBxSPGMGXTKPJ51kTbSsjc4Gk")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "1432197187")
+APP_URL = os.getenv("APP_URL", "https://test-1-edoj.onrender.com")
 
-def send_telegram_message(text: str):
+def send_telegram_message(text: str, target_chat_id: Optional[str] = None):
     token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", TELEGRAM_CHAT_ID)
+    chat_id = target_chat_id or os.getenv("TELEGRAM_CHAT_ID", TELEGRAM_CHAT_ID)
     if not token or not chat_id:
         return
     try:
@@ -36,7 +37,17 @@ def send_telegram_message(text: str):
         payload = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "HTML"
+            "parse_mode": "HTML",
+            "reply_markup": {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": "📱 Открыть Кабинет HR CRM",
+                            "web_app": {"url": APP_URL}
+                        }
+                    ]
+                ]
+            }
         }
         req_data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
@@ -47,6 +58,29 @@ def send_telegram_message(text: str):
         urllib.request.urlopen(req, timeout=5)
     except Exception as e:
         print(f"Telegram notification error: {e}")
+
+def setup_telegram_bot_menu():
+    token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
+    if not token:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{token}/setChatMenuButton"
+        payload = {
+            "menu_button": {
+                "type": "web_app",
+                "text": "📱 Кабинет HR",
+                "web_app": {"url": APP_URL}
+            }
+        }
+        req_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={'Content-Type': 'application/json'}
+        )
+        urllib.request.urlopen(req, timeout=5)
+    except Exception as e:
+        print(f"Telegram menu setup error: {e}")
 
 # Helper functions for JWT
 def base64url_encode(data: bytes) -> str:
@@ -367,6 +401,7 @@ async def add_no_cache_header(request, call_next):
 @app.on_event("startup")
 def startup():
     init_db()
+    setup_telegram_bot_menu()
     # Migrate any existing resume filenames to use Candidate ID naming format: resume_cand_{id}.ext
     conn = get_db()
     cursor = conn.cursor()

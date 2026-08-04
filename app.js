@@ -57,10 +57,19 @@ function applyTheme(theme) {
 }
 
 // ==========================================================================
+function initTelegramWebApp() {
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+  }
+}
+
 // Initialization & Auth
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
+  initTelegramWebApp();
   document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
   checkAuth();
 });
