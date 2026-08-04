@@ -1390,8 +1390,9 @@ if not os.path.exists(static_dir):
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+@app.get("/static/style.css")
 @app.get("/style.css")
-def serve_root_css():
+def serve_css():
     css_file = os.path.join(static_dir, "style.css")
     if os.path.exists(css_file):
         return FileResponse(css_file)
@@ -1400,8 +1401,9 @@ def serve_root_css():
         return FileResponse(root_css)
     raise HTTPException(status_code=404, detail="File not found")
 
+@app.get("/static/app.js")
 @app.get("/app.js")
-def serve_root_js():
+def serve_js():
     js_file = os.path.join(static_dir, "app.js")
     if os.path.exists(js_file):
         return FileResponse(js_file)
