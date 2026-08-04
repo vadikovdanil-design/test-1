@@ -76,41 +76,45 @@
       
       <!-- Top Header Bar -->
       <header class="header">
-        <a href="#" class="brand">
-          <span>SAG for people</span>
-          <span class="brand-badge">HR CRM</span>
-        </a>
+        <div class="header-top-row">
+          <a href="#" class="brand">
+            <span class="brand-text">SAG</span>
+            <span class="brand-badge">HR CRM</span>
+          </a>
 
-        <!-- Navigation Tabs -->
+          <!-- User Profile Info & Theme Control -->
+          <div class="user-profile">
+            <div class="user-info">
+              <div class="user-name" id="userName">Пользователь</div>
+              <div class="user-role-badge" id="userRoleBadge">Роль</div>
+            </div>
+            <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
+              <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
+            </button>
+            <button class="btn-logout" onclick="logout()" title="Выйти из системы">
+              <span>🚪</span> <span class="logout-text">Выйти</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
         <nav class="nav-tabs">
           <button class="nav-tab active" data-tab="requisitions" onclick="switchTab('requisitions')">
-            📋 Заявки на подбор
+            📋 Заявки
           </button>
           <button class="nav-tab" data-tab="candidates" onclick="switchTab('candidates')">
-            👤 База Соискателей
+            👤 Соискатели
           </button>
           <button class="nav-tab" data-tab="executive" onclick="switchTab('executive')">
-            📊 Дашборд Руководства
+            📊 Дашборд
           </button>
           <button class="nav-tab" data-tab="recruiters" onclick="switchTab('recruiters')">
-            📈 Аналитика Рекрутеров
+            📈 Аналитика
           </button>
           <button class="nav-tab" id="tabNavAdmin" data-tab="admin" onclick="switchTab('admin')" style="display:none;">
-            ⚙️ Администрирование
+            ⚙️ Админ
           </button>
         </nav>
-
-        <!-- User Profile Info & Inline Theme Control -->
-        <div class="user-profile">
-          <div class="user-info">
-            <div class="user-name" id="userName">Пользователь</div>
-            <div class="user-role-badge" id="userRoleBadge">Роль</div>
-          </div>
-          <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
-            <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
-          </button>
-          <button class="btn-logout" onclick="logout()">Выйти</button>
-        </div>
       </header>
 
       <!-- Main Content Container -->
