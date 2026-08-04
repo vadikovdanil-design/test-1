@@ -9,7 +9,7 @@ import time
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 
-from fastapi import FastAPI, HTTPException, Depends, Header, Query, Response, status, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, Header, Query, Response, status, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
@@ -414,7 +414,6 @@ async def add_no_cache_header(request, call_next):
 @app.on_event("startup")
 def startup():
     init_db()
-    setup_telegram_bot_menu()
     # Migrate any existing resume filenames to use Candidate ID naming format: resume_cand_{id}.ext
     conn = get_db()
     cursor = conn.cursor()
@@ -629,6 +628,85 @@ def login(req: LoginRequest):
 @app.get("/api/auth/me")
 def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
+
+class SelfTelegramBind(BaseModel):
+    telegram_chat_id: str
+
+@app.post("/api/users/me/telegram")
+def bind_self_telegram(data: SelfTelegramBind, current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (data.telegram_chat_id.strip(), current_user['id']))
+    conn.commit()
+    conn.close()
+    
+    if data.telegram_chat_id.strip():
+        try:
+            send_telegram_message(
+                f"✅ <b>Telegram успешно привязан!</b>\n\n"
+                f"<b>Пользователь:</b> {current_user.get('first_name','')} {current_user.get('last_name','')}\n"
+                f"<b>Должность:</b> {current_user.get('position','Не указана')}\n"
+                f"Теперь важные уведомления вашего подразделения будут поступать прямо сюда!",
+                target_chat_id=data.telegram_chat_id.strip()
+            )
+        except Exception:
+            pass
+            
+    return {"message": "Telegram Chat ID успешно сохранен"}
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(request: Request):
+    try:
+        data = await request.json()
+        message = data.get("message", {})
+        chat_id = str(message.get("chat", {}).get("id", ""))
+        text = (message.get("text") or "").strip()
+        contact = message.get("contact", {})
+        phone = contact.get("phone_number", "").replace("+", "").strip()
+
+        if not chat_id:
+            return {"status": "ok"}
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        target_user = None
+        if phone:
+            cursor.execute("SELECT * FROM users WHERE REPLACE(phone, '+', '') LIKE ? AND status = 'active'", (f"%{phone}%",))
+            target_user = cursor.fetchone()
+        elif text and "@" in text:
+            cursor.execute("SELECT * FROM users WHERE LOWER(username_email) = ? AND status = 'active'", (text.lower(),))
+            target_user = cursor.fetchone()
+
+        if target_user:
+            u_id = target_user['id']
+            cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (chat_id, u_id))
+            conn.commit()
+            send_telegram_message(
+                f"🎉 <b>Отлично, {target_user['first_name']}!</b>\n\n"
+                f"Ваш Telegram успешно привязан к аккаунту <b>SAG HR CRM</b>!\n"
+                f"<b>Должность:</b> {target_user['position'] or 'Сотрудник'}\n\n"
+                f"🔔 Все новые заявки на подбор вашего подразделения теперь будут поступать прямо сюда.",
+                target_chat_id=chat_id
+            )
+        else:
+            if text == "/start":
+                reply = (
+                    "👋 <b>Добро пожаловать в SAG HR CRM Notifier!</b>\n\n"
+                    "Чтобы автоматически привязать этот Telegram к вашему аккаунту, отправьте ваш <b>Email / Логин</b> (например: <code>admin@sag.uz</code>) прямо в ответ на это сообщение!\n\n"
+                    "💡 <i>Также ваш Telegram Chat ID: <code>" + chat_id + "</code> (его можно привязать в настройках вашего профиля на сайте).</i>"
+                )
+                send_telegram_message(reply, target_chat_id=chat_id)
+            elif text:
+                send_telegram_message(
+                    "❓ Пользователь с таким Email или телефоном не найден в системе.\n"
+                    "Пожалуйста, отправьте ваш Email, с которым вы зарегистрированы в SAG HR CRM (например: <code>admin@sag.uz</code>).",
+                    target_chat_id=chat_id
+                )
+        conn.close()
+    except Exception as e:
+        print(f"Telegram webhook error: {e}")
+    return {"status": "ok"}
 
 # Reference APIs
 @app.get("/api/factories")
