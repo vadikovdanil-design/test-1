@@ -23,7 +23,7 @@ let searchTimer = null;
 // Theme Switcher (Light / Dark Background Toggle)
 // ==========================================================================
 function initTheme() {
-  const savedTheme = localStorage.getItem("sag_theme") || "dark";
+  const savedTheme = localStorage.getItem("sag_theme") || "light";
   applyTheme(savedTheme);
 }
 
@@ -162,11 +162,15 @@ function logout() {
 function showLoginView() {
   document.getElementById("loginView").style.display = "block";
   document.getElementById("mainAppView").style.display = "none";
+  const mobileNav = document.querySelector(".mobile-bottom-nav");
+  if (mobileNav) mobileNav.style.display = "none";
 }
 
 function showMainAppView() {
   document.getElementById("loginView").style.display = "none";
   document.getElementById("mainAppView").style.display = "flex";
+  const mobileNav = document.querySelector(".mobile-bottom-nav");
+  if (mobileNav) mobileNav.style.display = "flex";
 
   // Update profile in header
   const user = state.currentUser;

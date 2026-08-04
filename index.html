@@ -19,9 +19,6 @@
       <div class="login-header">
         <div class="login-top-bar">
           <div class="login-logo">SAG HR Portal</div>
-          <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
-            <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
-          </button>
         </div>
         <div class="login-subtitle">Система управления подбором персонала и аналитики</div>
       </div>
@@ -33,8 +30,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="loginPin">PIN-код (по умолчанию 1234)</label>
-          <input type="password" id="loginPin" class="form-control" placeholder="****" value="1234" required>
+          <label class="form-label" for="loginPin">PIN-код / Пароль</label>
+          <input type="password" id="loginPin" class="form-control" placeholder="****" required>
         </div>
 
         <div id="loginError" class="badge badge-rejected" style="display:none; width:100%; justify-content:center; margin-bottom:1rem; padding:8px;"></div>
@@ -43,29 +40,6 @@
           Войти в систему
         </button>
       </form>
-
-      <!-- Demopresets for instant testing -->
-      <div class="preset-users">
-        <div class="preset-title">Демо-аккаунты (ПИН: 1234):</div>
-        <div class="preset-grid">
-          <button type="button" class="preset-btn" onclick="quickLogin('admin@sag.uz')">
-            <span class="preset-btn-name">Супер Админ</span>
-            <span class="preset-btn-role">admin@sag.uz</span>
-          </button>
-          <button type="button" class="preset-btn" onclick="quickLogin('director@sag.uz')">
-            <span class="preset-btn-name">HR-Директор</span>
-            <span class="preset-btn-role">director@sag.uz</span>
-          </button>
-          <button type="button" class="preset-btn" onclick="quickLogin('manager1@sag.uz')">
-            <span class="preset-btn-name">Руководитель цеха</span>
-            <span class="preset-btn-role">manager1@sag.uz</span>
-          </button>
-          <button type="button" class="preset-btn" onclick="quickLogin('recruiter1@sag.uz')">
-            <span class="preset-btn-name">Рекрутер</span>
-            <span class="preset-btn-role">recruiter1@sag.uz</span>
-          </button>
-        </div>
-      </div>
     </div>
 
 
