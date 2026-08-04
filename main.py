@@ -271,13 +271,15 @@ def init_db():
     if "resume_path" not in cols:
         cursor.execute("ALTER TABLE candidates ADD COLUMN resume_path VARCHAR(550);")
     
-    # Check if position and permissions columns exist in users
+    # Check if position, permissions, and telegram_chat_id columns exist in users
     cursor.execute("PRAGMA table_info(users)")
     u_cols = [r[1] for r in cursor.fetchall()]
     if "position" not in u_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN position VARCHAR(255) DEFAULT '';")
     if "permissions" not in u_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '';")
+    if "telegram_chat_id" not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN telegram_chat_id VARCHAR(100) DEFAULT '';")
     
     conn.commit()
     
@@ -650,21 +652,33 @@ class SelfTelegramBind(BaseModel):
 def bind_self_telegram(data: SelfTelegramBind, current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (data.telegram_chat_id.strip(), current_user['id']))
+    
+    # Dynamic column safety check
+    try:
+        cursor.execute("PRAGMA table_info(users)")
+        u_cols = [r[1] for r in cursor.fetchall()]
+        if "telegram_chat_id" not in u_cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN telegram_chat_id VARCHAR(100) DEFAULT '';")
+            conn.commit()
+    except Exception as e:
+        print(f"Migration fallback error: {e}")
+
+    tg_id = data.telegram_chat_id.strip()
+    cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (tg_id, current_user['id']))
     conn.commit()
     conn.close()
     
-    if data.telegram_chat_id.strip():
+    if tg_id:
         try:
             send_telegram_message(
                 f"✅ <b>Telegram успешно привязан!</b>\n\n"
                 f"<b>Пользователь:</b> {current_user.get('first_name','')} {current_user.get('last_name','')}\n"
                 f"<b>Должность:</b> {current_user.get('position','Не указана')}\n"
-                f"Теперь важные уведомления вашего подразделения будут поступать прямо сюда!",
-                target_chat_id=data.telegram_chat_id.strip()
+                f"Теперь важные уведомления вашего подразделения будут поступать прямо сюда в Telegram!",
+                target_chat_id=tg_id
             )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Telegram notify error: {e}")
             
     return {"message": "Telegram Chat ID успешно сохранен"}
 
