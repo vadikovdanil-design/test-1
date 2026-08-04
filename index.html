@@ -10,11 +10,6 @@
 </head>
 <body>
 
-  <!-- Floating Corner Theme Toggle -->
-  <button type="button" class="btn-theme-toggle theme-btn-global floating-theme-btn" onclick="toggleTheme()" title="Сменить фон">
-    <span class="theme-icon">☀️</span> <span class="theme-text">Белый фон</span>
-  </button>
-
   <div id="app">
 
     <!-- ====================================================================
@@ -22,7 +17,12 @@
          ==================================================================== -->
     <div id="loginView" class="login-container">
       <div class="login-header">
-        <div class="login-logo">SAG HR Portal</div>
+        <div class="login-top-bar">
+          <div class="login-logo">SAG HR Portal</div>
+          <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
+            <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
+          </button>
+        </div>
         <div class="login-subtitle">Система управления подбором персонала и аналитики</div>
       </div>
 
@@ -100,12 +100,15 @@
           </button>
         </nav>
 
-        <!-- User Profile Info -->
+        <!-- User Profile Info & Inline Theme Control -->
         <div class="user-profile">
           <div class="user-info">
             <div class="user-name" id="userName">Пользователь</div>
             <div class="user-role-badge" id="userRoleBadge">Роль</div>
           </div>
+          <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
+            <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
+          </button>
           <button class="btn-logout" onclick="logout()">Выйти</button>
         </div>
       </header>
@@ -671,6 +674,30 @@
 
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Mobile Bottom Dock Navigation -->
+  <nav class="mobile-bottom-nav">
+    <button class="mobile-nav-item active" data-tab="requisitions" onclick="switchTab('requisitions')">
+      <span class="mobile-nav-icon">📋</span>
+      <span class="mobile-nav-label">Заявки</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="candidates" onclick="switchTab('candidates')">
+      <span class="mobile-nav-icon">👤</span>
+      <span class="mobile-nav-label">Соискатели</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="executive" onclick="switchTab('executive')">
+      <span class="mobile-nav-icon">📊</span>
+      <span class="mobile-nav-label">Дашборд</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="recruiters" onclick="switchTab('recruiters')">
+      <span class="mobile-nav-icon">📈</span>
+      <span class="mobile-nav-label">Рекрутеры</span>
+    </button>
+    <button class="mobile-nav-item" id="mobileTabAdmin" data-tab="admin" onclick="switchTab('admin')" style="display:none;">
+      <span class="mobile-nav-icon">⚙️</span>
+      <span class="mobile-nav-label">Админ</span>
+    </button>
+  </nav>
 
   <!-- Scripts -->
   <script src="/static/app.js"></script>
