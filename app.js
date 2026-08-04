@@ -985,6 +985,7 @@ function openCreateUserModal() {
   document.getElementById("userEmail").value = "";
   document.getElementById("userPhone").value = "";
   document.getElementById("userPosition").value = "";
+  if (document.getElementById("userTelegramChatId")) document.getElementById("userTelegramChatId").value = "";
   document.getElementById("userPin").value = "1234";
 
   document.querySelectorAll("input[name='userRoleCode']").forEach(cb => cb.checked = false);
@@ -1006,6 +1007,7 @@ function editUser(userId) {
   document.getElementById("userEmail").value = u.username_email;
   document.getElementById("userPhone").value = u.phone;
   document.getElementById("userPosition").value = u.position || "";
+  if (document.getElementById("userTelegramChatId")) document.getElementById("userTelegramChatId").value = u.telegram_chat_id || "";
   document.getElementById("userPin").value = "";
   if (document.getElementById("userFactory")) document.getElementById("userFactory").value = u.factory_id || 1;
   if (document.getElementById("userDept")) document.getElementById("userDept").value = u.department_id || 1;
@@ -1033,6 +1035,7 @@ async function saveUser() {
   const email = document.getElementById("userEmail").value.trim();
   const phone = document.getElementById("userPhone").value.trim();
   const position = document.getElementById("userPosition").value.trim();
+  const tgChatId = document.getElementById("userTelegramChatId") ? document.getElementById("userTelegramChatId").value.trim() : "";
   const pin = document.getElementById("userPin").value.trim();
   const factoryId = parseInt(document.getElementById("userFactory").value || "1");
   const deptId = parseInt(document.getElementById("userDept").value || "1");
@@ -1056,6 +1059,7 @@ async function saveUser() {
         department_id: deptId,
         position: position,
         permissions: permissions,
+        telegram_chat_id: tgChatId,
         roles: roles
       };
       if (pin) payload.pin = pin;
@@ -1083,6 +1087,7 @@ async function saveUser() {
           department_id: deptId,
           position: position,
           permissions: permissions,
+          telegram_chat_id: tgChatId,
           roles: roles
         })
       });

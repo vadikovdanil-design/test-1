@@ -37,17 +37,7 @@ def send_telegram_message(text: str, target_chat_id: Optional[str] = None):
         payload = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "HTML",
-            "reply_markup": {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": "📱 Открыть Кабинет HR CRM",
-                            "web_app": {"url": APP_URL}
-                        }
-                    ]
-                ]
-            }
+            "parse_mode": "HTML"
         }
         req_data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
@@ -59,28 +49,51 @@ def send_telegram_message(text: str, target_chat_id: Optional[str] = None):
     except Exception as e:
         print(f"Telegram notification error: {e}")
 
-def setup_telegram_bot_menu():
-    token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
-    if not token:
-        return
-    try:
-        url = f"https://api.telegram.org/bot{token}/setChatMenuButton"
-        payload = {
-            "menu_button": {
-                "type": "web_app",
-                "text": "📱 Кабинет HR",
-                "web_app": {"url": APP_URL}
-            }
-        }
-        req_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(
-            url,
-            data=req_data,
-            headers={'Content-Type': 'application/json'}
-        )
-        urllib.request.urlopen(req, timeout=5)
-    except Exception as e:
-        print(f"Telegram menu setup error: {e}")
+def send_department_telegram_notification(dept_id: int, req_title: str, req_id: str, count: int, salary: str, plan_close_date: str, manager_name: str):
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 1. Get Department Name
+    cursor.execute("SELECT name FROM departments WHERE id = ?", (dept_id,))
+    dept_row = cursor.fetchone()
+    dept_name = dept_row[0] if dept_row else "Подразделение"
+    
+    # 2. Find Users responsible for THIS SPECIFIC department OR Admin/Director
+    cursor.execute("""
+    SELECT DISTINCT u.telegram_chat_id, u.first_name, u.last_name, u.department_id
+    FROM users u
+    JOIN user_roles ur ON u.id = ur.user_id
+    JOIN roles r ON ur.role_id = r.id
+    WHERE u.status = 'active'
+      AND u.telegram_chat_id IS NOT NULL 
+      AND u.telegram_chat_id != ''
+      AND (u.department_id = ? OR r.code IN ('admin', 'director'))
+    """, (dept_id,))
+    
+    users_to_notify = cursor.fetchall()
+    conn.close()
+
+    text = (
+        f"📋 <b>ЗАЯВКА НА ПОДБОР #{req_id}</b>\n\n"
+        f"<b>Отдел / Цех:</b> {dept_name}\n"
+        f"<b>Должность:</b> {req_title}\n"
+        f"<b>Количество:</b> {count} чел.\n"
+        f"<b>Зарплата:</b> {salary or 'По договоренности'}\n"
+        f"<b>Срок закрытия:</b> {plan_close_date}\n"
+        f"<b>Заявитель:</b> {manager_name}"
+    )
+
+    # Send ONLY to department-responsible linked Telegram accounts
+    sent_chats = set()
+    for u in users_to_notify:
+        chat_id = u["telegram_chat_id"]
+        if chat_id and chat_id not in sent_chats:
+            send_telegram_message(text, target_chat_id=chat_id)
+            sent_chats.add(chat_id)
+            
+    # Fallback to default TELEGRAM_CHAT_ID if no specific department user has linked Telegram yet
+    if not sent_chats:
+        send_telegram_message(text)
 
 # Helper functions for JWT
 def base64url_encode(data: bytes) -> str:
@@ -751,16 +764,17 @@ def create_requisition(req: RequisitionCreate, current_user: dict = Depends(get_
 
     try:
         user_name = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}".strip()
-        send_telegram_message(
-            f"📋 <b>НОВАЯ ЗАЯВКА НА ПОДБОР #{req_id}</b>\n\n"
-            f"<b>Должность:</b> {req.title}\n"
-            f"<b>Количество:</b> {req.count} чел.\n"
-            f"<b>Зарплата:</b> {req.salary or 'По договоренности'}\n"
-            f"<b>Срок закрытия:</b> {req.plan_close_date}\n"
-            f"<b>Заявитель:</b> {user_name}"
+        send_department_telegram_notification(
+            dept_id=req.department_id,
+            req_title=req.title,
+            req_id=req_id,
+            count=req.count,
+            salary=req.salary,
+            plan_close_date=req.plan_close_date,
+            manager_name=user_name
         )
     except Exception as e:
-        print(f"Telegram notify error: {e}")
+        print(f"Telegram department notify error: {e}")
     
     return {"message": "Заявка успешно создана", "id": req_id}
 
