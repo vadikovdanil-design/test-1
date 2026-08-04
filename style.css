@@ -1228,6 +1228,31 @@ body.theme-light .user-role-badge {
     color: var(--accent-blue-hover);
   }
 
+  header .nav-tabs {
+    display: none !important;
+  }
+
+  .header-top-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .user-profile {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .user-name {
+    max-width: 110px;
+    font-size: 0.8rem;
+  }
+
+  .user-role-badge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+  }
+
   .main-container {
     padding: 1rem 0.75rem 90px 0.75rem !important;
   }

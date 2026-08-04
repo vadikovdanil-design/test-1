@@ -684,39 +684,51 @@ async def telegram_webhook(request: Request):
         conn = get_db()
         cursor = conn.cursor()
 
+        search_term = phone or text.strip().lower()
+        
         target_user = None
-        if phone:
-            cursor.execute("SELECT * FROM users WHERE REPLACE(phone, '+', '') LIKE ? AND status = 'active'", (f"%{phone}%",))
-            target_user = cursor.fetchone()
-        elif text and "@" in text:
-            cursor.execute("SELECT * FROM users WHERE LOWER(username_email) = ? AND status = 'active'", (text.lower(),))
+        if search_term and search_term != "/start":
+            cursor.execute("""
+            SELECT * FROM users 
+            WHERE status = 'active'
+              AND (
+                LOWER(username_email) = ?
+                OR LOWER(username_email) LIKE ?
+                OR REPLACE(phone, '+', '') LIKE ?
+                OR phone LIKE ?
+              )
+            """, (search_term, f"%{search_term}%", f"%{search_term}%", f"%{search_term}%"))
             target_user = cursor.fetchone()
 
         if target_user:
-            u_id = target_user['id']
+            u_dict = dict(target_user)
+            u_id = u_dict['id']
             cursor.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (chat_id, u_id))
             conn.commit()
+            
+            user_fname = u_dict.get('first_name') or 'Сотрудник'
+            user_pos = u_dict.get('position') or 'Сотрудник'
+            
             send_telegram_message(
-                f"🎉 <b>Отлично, {target_user['first_name']}!</b>\n\n"
+                f"🎉 <b>Отлично, {user_fname}!</b>\n\n"
                 f"Ваш Telegram успешно привязан к аккаунту <b>SAG HR CRM</b>!\n"
-                f"<b>Должность:</b> {target_user['position'] or 'Сотрудник'}\n\n"
-                f"🔔 Все новые заявки на подбор вашего подразделения теперь будут поступать прямо сюда.",
+                f"<b>Должность:</b> {user_pos}\n\n"
+                f"🔔 Все новые заявки на подбор вашего подразделения теперь будут поступать прямо сюда в Telegram.",
                 target_chat_id=chat_id
             )
-        else:
-            if text == "/start":
-                reply = (
-                    "👋 <b>Добро пожаловать в SAG HR CRM Notifier!</b>\n\n"
-                    "Чтобы автоматически привязать этот Telegram к вашему аккаунту, отправьте ваш <b>Email / Логин</b> (например: <code>admin@sag.uz</code>) прямо в ответ на это сообщение!\n\n"
-                    "💡 <i>Также ваш Telegram Chat ID: <code>" + chat_id + "</code> (его можно привязать в настройках вашего профиля на сайте).</i>"
-                )
-                send_telegram_message(reply, target_chat_id=chat_id)
-            elif text:
-                send_telegram_message(
-                    "❓ Пользователь с таким Email или телефоном не найден в системе.\n"
-                    "Пожалуйста, отправьте ваш Email, с которым вы зарегистрированы в SAG HR CRM (например: <code>admin@sag.uz</code>).",
-                    target_chat_id=chat_id
-                )
+        elif text == "/start":
+            reply = (
+                "👋 <b>Добро пожаловать в SAG HR CRM Notifier!</b>\n\n"
+                "Чтобы автоматически привязать этот Telegram к вашему аккаунту, отправьте ваш <b>Email / Логин</b> (например: <code>superdir@sag.uz</code>) прямо в ответ на это сообщение!\n\n"
+                "💡 <i>Ваш Telegram Chat ID: <code>" + chat_id + "</code></i>"
+            )
+            send_telegram_message(reply, target_chat_id=chat_id)
+        elif text:
+            send_telegram_message(
+                f"❓ Пользователь с Email/телефоном <code>{text}</code> не найден в базе SAG HR CRM.\n\n"
+                f"Пожалуйста, отправьте ваш Email, зарегистрированный на сайте (например: <code>admin@sag.uz</code>) или привяжите ваш Chat ID: <code>{chat_id}</code> на сайте!",
+                target_chat_id=chat_id
+            )
         conn.close()
     except Exception as e:
         print(f"Telegram webhook error: {e}")
