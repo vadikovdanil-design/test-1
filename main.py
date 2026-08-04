@@ -1383,42 +1383,47 @@ def admin_update_user(user_id: int, data: UserUpdate, current_user: dict = Depen
     conn.close()
     return {"message": "Данные пользователя обновлены"}
 
-# Static files hosting
+# Static files hosting (supports both static/ subfolder and root repository files)
 static_dir = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir, exist_ok=True)
+root_dir = os.path.dirname(__file__)
 
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-@app.get("/static/style.css")
-@app.get("/style.css")
-def serve_css():
-    css_file = os.path.join(static_dir, "style.css")
-    if os.path.exists(css_file):
-        return FileResponse(css_file)
-    root_css = os.path.join(os.path.dirname(__file__), "style.css")
-    if os.path.exists(root_css):
-        return FileResponse(root_css)
+@app.get("/static/{file_name}")
+def serve_static_subfolder(file_name: str):
+    p1 = os.path.join(static_dir, file_name)
+    if os.path.isfile(p1):
+        return FileResponse(p1)
+    p2 = os.path.join(root_dir, file_name)
+    if os.path.isfile(p2):
+        return FileResponse(p2)
     raise HTTPException(status_code=404, detail="File not found")
 
-@app.get("/static/app.js")
+@app.get("/style.css")
+def serve_root_css():
+    p1 = os.path.join(static_dir, "style.css")
+    if os.path.isfile(p1):
+        return FileResponse(p1)
+    p2 = os.path.join(root_dir, "style.css")
+    if os.path.isfile(p2):
+        return FileResponse(p2)
+    raise HTTPException(status_code=404, detail="File not found")
+
 @app.get("/app.js")
-def serve_js():
-    js_file = os.path.join(static_dir, "app.js")
-    if os.path.exists(js_file):
-        return FileResponse(js_file)
-    root_js = os.path.join(os.path.dirname(__file__), "app.js")
-    if os.path.exists(root_js):
-        return FileResponse(root_js)
+def serve_root_js():
+    p1 = os.path.join(static_dir, "app.js")
+    if os.path.isfile(p1):
+        return FileResponse(p1)
+    p2 = os.path.join(root_dir, "app.js")
+    if os.path.isfile(p2):
+        return FileResponse(p2)
     raise HTTPException(status_code=404, detail="File not found")
 
 @app.get("/")
 def serve_index():
     index_file = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_file):
+    if os.path.isfile(index_file):
         return FileResponse(index_file)
-    root_index = os.path.join(os.path.dirname(__file__), "index.html")
-    if os.path.exists(root_index):
+    root_index = os.path.join(root_dir, "index.html")
+    if os.path.isfile(root_index):
         return FileResponse(root_index)
     return HTMLResponse("<h1>SAG for people HR CRM Server Running</h1>")
 
