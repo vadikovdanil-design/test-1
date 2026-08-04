@@ -183,6 +183,14 @@ def init_db():
     if "resume_path" not in cols:
         cursor.execute("ALTER TABLE candidates ADD COLUMN resume_path VARCHAR(550);")
     
+    # Check if position and permissions columns exist in users
+    cursor.execute("PRAGMA table_info(users)")
+    u_cols = [r[1] for r in cursor.fetchall()]
+    if "position" not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN position VARCHAR(255) DEFAULT '';")
+    if "permissions" not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '';")
+    
     conn.commit()
     
     # Seed Initial Data if empty
@@ -432,6 +440,8 @@ class UserCreate(BaseModel):
     phone: str
     factory_id: Optional[int] = 1
     department_id: Optional[int] = 1
+    position: Optional[str] = ""
+    permissions: Optional[List[str]] = []
     pin: str
     roles: List[str]
 
@@ -441,6 +451,8 @@ class UserUpdate(BaseModel):
     phone: Optional[str] = None
     factory_id: Optional[int] = None
     department_id: Optional[int] = None
+    position: Optional[str] = None
+    permissions: Optional[List[str]] = None
     status: Optional[str] = None
     pin: Optional[str] = None
     roles: Optional[List[str]] = None
@@ -1302,17 +1314,18 @@ def admin_get_users(current_user: dict = Depends(get_current_user)):
 @app.post("/api/admin/users")
 def admin_create_user(data: UserCreate, current_user: dict = Depends(get_current_user)):
     if 'admin' not in current_user['roles']:
-        raise HTTPException(status_code=403, detail="Только Администратор имеет доступ")
+        raise HTTPException(status_code=403, detail="Только Супер Админ имеет право создавать аккаунты")
         
     conn = get_db()
     cursor = conn.cursor()
     
     pin_h = hash_pin(data.pin)
+    perms_str = json.dumps(data.permissions or [])
     try:
         cursor.execute("""
-        INSERT INTO users (username_email, first_name, last_name, phone, factory_id, department_id, pin_hash, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        """, (data.username_email, data.first_name, data.last_name, data.phone, data.factory_id, data.department_id, pin_h))
+        INSERT INTO users (username_email, first_name, last_name, phone, factory_id, department_id, position, permissions, pin_hash, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        """, (data.username_email, data.first_name, data.last_name, data.phone, data.factory_id, data.department_id, data.position or "", perms_str, pin_h))
         new_uid = cursor.lastrowid
         
         for r_code in data.roles:
@@ -1327,12 +1340,12 @@ def admin_create_user(data: UserCreate, current_user: dict = Depends(get_current
         raise HTTPException(status_code=400, detail="Пользователь с таким Email или телефоном уже существует")
         
     conn.close()
-    return {"message": "Пользователь создан", "id": new_uid}
+    return {"message": "Пользователь успешно создан", "id": new_uid}
 
 @app.put("/api/admin/users/{user_id}")
 def admin_update_user(user_id: int, data: UserUpdate, current_user: dict = Depends(get_current_user)):
     if 'admin' not in current_user['roles']:
-        raise HTTPException(status_code=403, detail="Только Администратор имеет доступ")
+        raise HTTPException(status_code=403, detail="Только Супер Админ имеет право редактировать аккаунты")
         
     conn = get_db()
     cursor = conn.cursor()
@@ -1360,6 +1373,12 @@ def admin_update_user(user_id: int, data: UserUpdate, current_user: dict = Depen
     if data.department_id:
         updates.append("department_id = ?")
         params.append(data.department_id)
+    if data.position is not None:
+        updates.append("position = ?")
+        params.append(data.position)
+    if data.permissions is not None:
+        updates.append("permissions = ?")
+        params.append(json.dumps(data.permissions))
     if data.status:
         updates.append("status = ?")
         params.append(data.status)

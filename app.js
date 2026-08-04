@@ -965,15 +965,19 @@ async function loadAdminUsers() {
 }
 
 function openCreateUserModal() {
-  document.getElementById("modalUserTitle").textContent = "Добавить нового пользователя";
+  document.getElementById("modalUserTitle").textContent = "Добавить пользователя (Супер Админ)";
   document.getElementById("userEditId").value = "";
   document.getElementById("userFirstName").value = "";
   document.getElementById("userLastName").value = "";
   document.getElementById("userEmail").value = "";
   document.getElementById("userPhone").value = "";
+  document.getElementById("userPosition").value = "";
   document.getElementById("userPin").value = "1234";
 
   document.querySelectorAll("input[name='userRoleCode']").forEach(cb => cb.checked = false);
+  document.querySelectorAll("input[name='userPermCode']").forEach(cb => {
+    cb.checked = ["can_view_all_requisitions", "can_manage_candidates"].includes(cb.value);
+  });
 
   openModal("modalUser");
 }
@@ -988,12 +992,22 @@ function editUser(userId) {
   document.getElementById("userLastName").value = u.last_name;
   document.getElementById("userEmail").value = u.username_email;
   document.getElementById("userPhone").value = u.phone;
+  document.getElementById("userPosition").value = u.position || "";
   document.getElementById("userPin").value = "";
   if (document.getElementById("userFactory")) document.getElementById("userFactory").value = u.factory_id || 1;
   if (document.getElementById("userDept")) document.getElementById("userDept").value = u.department_id || 1;
 
   document.querySelectorAll("input[name='userRoleCode']").forEach(cb => {
     cb.checked = u.roles.includes(cb.value);
+  });
+
+  let uPerms = [];
+  try {
+    uPerms = typeof u.permissions === "string" ? JSON.parse(u.permissions || "[]") : (u.permissions || []);
+  } catch (e) { uPerms = []; }
+
+  document.querySelectorAll("input[name='userPermCode']").forEach(cb => {
+    cb.checked = uPerms.includes(cb.value);
   });
 
   openModal("modalUser");
@@ -1005,14 +1019,16 @@ async function saveUser() {
   const lastName = document.getElementById("userLastName").value.trim();
   const email = document.getElementById("userEmail").value.trim();
   const phone = document.getElementById("userPhone").value.trim();
+  const position = document.getElementById("userPosition").value.trim();
   const pin = document.getElementById("userPin").value.trim();
   const factoryId = parseInt(document.getElementById("userFactory").value || "1");
   const deptId = parseInt(document.getElementById("userDept").value || "1");
 
   const roles = Array.from(document.querySelectorAll("input[name='userRoleCode']:checked")).map(cb => cb.value);
+  const permissions = Array.from(document.querySelectorAll("input[name='userPermCode']:checked")).map(cb => cb.value);
 
-  if (!firstName || !lastName || !email || !phone || roles.length === 0) {
-    showToast("Заполните обязательные поля и выберите хотя бы одну роль", "error");
+  if (!firstName || !lastName || !email || !phone || !position || roles.length === 0) {
+    showToast("Заполните имя, фамилию, email, телефон, должность и выберите хотя бы одну роль", "error");
     return;
   }
 
@@ -1025,6 +1041,8 @@ async function saveUser() {
         phone: phone,
         factory_id: factoryId,
         department_id: deptId,
+        position: position,
+        permissions: permissions,
         roles: roles
       };
       if (pin) payload.pin = pin;
@@ -1037,7 +1055,7 @@ async function saveUser() {
     } else {
       // Create
       if (!pin) {
-        showToast("Укажите PIN-код для нового пользователя", "error");
+        showToast("Укажите PIN-код / пароль для нового пользователя", "error");
         return;
       }
       await apiRequest("/api/admin/users", {
@@ -1050,10 +1068,12 @@ async function saveUser() {
           pin: pin,
           factory_id: factoryId,
           department_id: deptId,
+          position: position,
+          permissions: permissions,
           roles: roles
         })
       });
-      showToast("Пользователь успешно создан", "success");
+      showToast("Пользователь успешно создан Супер Админом", "success");
     }
     closeModal("modalUser");
     loadAdminUsers();

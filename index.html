@@ -649,6 +649,10 @@
               <label class="form-label" for="userPin">PIN-код (4 цифры) *</label>
               <input type="password" id="userPin" class="form-control" placeholder="например 1234">
             </div>
+            <div class="form-group full-width">
+              <label class="form-label" for="userPosition">Должность сотрудника *</label>
+              <input type="text" id="userPosition" class="form-control" placeholder="например: Главный рекрутер / Зав. складом">
+            </div>
             <div class="form-group">
               <label class="form-label" for="userFactory">Завод</label>
               <select id="userFactory" class="form-select"></select>
@@ -658,12 +662,23 @@
               <select id="userDept" class="form-select"></select>
             </div>
             <div class="form-group full-width">
-              <label class="form-label">Роли в системе *</label>
+              <label class="form-label">Роль в системе *</label>
               <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
-                <label><input type="checkbox" name="userRoleCode" value="admin"> Администратор</label>
+                <label><input type="checkbox" name="userRoleCode" value="admin"> Супер Админ</label>
                 <label><input type="checkbox" name="userRoleCode" value="director"> HR-Директор</label>
-                <label><input type="checkbox" name="userRoleCode" value="manager"> Руководитель</label>
+                <label><input type="checkbox" name="userRoleCode" value="manager"> Руководитель цеха</label>
                 <label><input type="checkbox" name="userRoleCode" value="recruiter"> Рекрутер</label>
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Разрешения и права доступа</label>
+              <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px; font-size:0.85rem;">
+                <label><input type="checkbox" name="userPermCode" value="can_view_all_requisitions" checked> 👁️ Просмотр всех заявок на подбор</label>
+                <label><input type="checkbox" name="userPermCode" value="can_create_requisition"> ➕ Создание новых заявок</label>
+                <label><input type="checkbox" name="userPermCode" value="can_approve_requisition"> ✅ Утверждение и назначение рекрутеров</label>
+                <label><input type="checkbox" name="userPermCode" value="can_manage_candidates" checked> 👤 Управление базой соискателей</label>
+                <label><input type="checkbox" name="userPermCode" value="can_view_analytics"> 📊 Доступ к аналитике и KPI</label>
+                <label><input type="checkbox" name="userPermCode" value="can_manage_users"> ⚙️ Создание аккаунтов (Права Супер Админа)</label>
               </div>
             </div>
           </div>
