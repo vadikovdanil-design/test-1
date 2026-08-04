@@ -95,6 +95,19 @@ def send_department_telegram_notification(dept_id: int, req_title: str, req_id: 
     if not sent_chats:
         send_telegram_message(text)
 
+def setup_telegram_webhook():
+    token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
+    if not token or not APP_URL:
+        return
+    try:
+        webhook_url = f"{APP_URL.rstrip('/')}/api/telegram/webhook"
+        url = f"https://api.telegram.org/bot{token}/setWebhook?url={webhook_url}"
+        req = urllib.request.Request(url)
+        urllib.request.urlopen(req, timeout=5)
+        print(f"Telegram webhook configured successfully to: {webhook_url}")
+    except Exception as e:
+        print(f"Telegram webhook setup error: {e}")
+
 # Helper functions for JWT
 def base64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
@@ -414,6 +427,7 @@ async def add_no_cache_header(request, call_next):
 @app.on_event("startup")
 def startup():
     init_db()
+    setup_telegram_webhook()
     # Migrate any existing resume filenames to use Candidate ID naming format: resume_cand_{id}.ext
     conn = get_db()
     cursor = conn.cursor()

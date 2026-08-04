@@ -1108,6 +1108,29 @@ function openModal(id) {
   if (m) m.classList.add("active");
 }
 
+function openTelegramModal() {
+  const currentTgId = state.currentUser ? (state.currentUser.telegram_chat_id || "") : "";
+  document.getElementById("selfTelegramChatId").value = currentTgId;
+  openModal("modalTelegram");
+}
+
+async function saveSelfTelegram() {
+  const tgId = document.getElementById("selfTelegramChatId").value.trim();
+  try {
+    await apiRequest("/api/users/me/telegram", {
+      method: "POST",
+      body: JSON.stringify({ telegram_chat_id: tgId })
+    });
+    if (state.currentUser) {
+      state.currentUser.telegram_chat_id = tgId;
+    }
+    showToast(tgId ? "Telegram успешно привязан! Проверьте сообщение в Telegram." : "Telegram Chat ID отвязан", "success");
+    closeModal("modalTelegram");
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function closeModal(id) {
   const m = document.getElementById(id);
   if (m) m.classList.remove("active");

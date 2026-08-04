@@ -64,6 +64,9 @@
               <div class="user-name" id="userName">Пользователь</div>
               <div class="user-role-badge" id="userRoleBadge">Роль</div>
             </div>
+            <button type="button" class="btn-theme-toggle" onclick="openTelegramModal()" style="background:#2563eb; color:white; border-color:#2563eb;" title="Привязать Telegram">
+              <span>📱</span> <span class="theme-text">Telegram</span>
+            </button>
             <button type="button" class="btn-theme-toggle theme-btn-global" onclick="toggleTheme()" title="Сменить фон">
               <span class="theme-icon">☀️</span> <span class="theme-text">Фон</span>
             </button>
@@ -667,6 +670,32 @@
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('modalUser')">Отмена</button>
         <button class="btn btn-primary" onclick="saveUser()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Self Bind Telegram -->
+  <div id="modalTelegram" class="modal-overlay">
+    <div class="modal-card" style="max-width:460px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📱 Привязка Telegram-уведомлений</h3>
+        <button class="modal-close" onclick="closeModal('modalTelegram')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px; font-size:0.88rem; color:#1e40af; margin-bottom:16px; line-height:1.5;">
+          <strong>💡 Как легко привязать за 10 секунд:</strong><br>
+          1. В Telegram откройте вашего бота.<br>
+          2. Нажмите <b>/start</b> или отправьте ему свой Email (например: <code>admin@sag.uz</code>).<br>
+          3. Бот покажет ваш <b>Chat ID</b> — вставьте его ниже и нажмите <b>«Сохранить»</b>!
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="selfTelegramChatId">Ваш Telegram Chat ID *</label>
+          <input type="text" id="selfTelegramChatId" class="form-control" placeholder="например: 1432197187">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modalTelegram')">Отмена</button>
+        <button class="btn btn-primary" onclick="saveSelfTelegram()">Сохранить и привязать</button>
       </div>
     </div>
   </div>
