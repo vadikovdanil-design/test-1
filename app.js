@@ -176,6 +176,8 @@ function showMainAppView() {
   // Show/Hide Admin Tab
   const isAdmin = user.roles.includes("admin");
   document.getElementById("tabNavAdmin").style.display = isAdmin ? "flex" : "none";
+  const mobileAdmin = document.getElementById("mobileTabAdmin");
+  if (mobileAdmin) mobileAdmin.style.display = isAdmin ? "flex" : "none";
 }
 
 // ==========================================================================
@@ -246,7 +248,7 @@ function populateSelects() {
 // ==========================================================================
 function switchTab(tabName) {
   state.activeTab = tabName;
-  document.querySelectorAll(".nav-tab").forEach(t => {
+  document.querySelectorAll(".nav-tab, .mobile-nav-item").forEach(t => {
     t.classList.toggle("active", t.dataset.tab === tabName);
   });
   document.querySelectorAll(".tab-content").forEach(c => {
@@ -301,13 +303,13 @@ function renderRequisitionsTable(reqs) {
 
     return `
       <tr>
-        <td><b>#${r.id}</b></td>
-        <td><b>${escapeHtml(r.title)}</b></td>
-        <td>${escapeHtml(r.department_name || "-")}</td>
-        <td>${r.open_date}</td>
-        <td>${r.plan_close_date}</td>
-        <td>${r.hired_count} / ${r.count} чел.</td>
-        <td>
+        <td data-label="№ Заявки"><b>#${r.id}</b></td>
+        <td data-label="Должность"><b>${escapeHtml(r.title)}</b></td>
+        <td data-label="Подразделение">${escapeHtml(r.department_name || "-")}</td>
+        <td data-label="Дата открытия">${r.open_date}</td>
+        <td data-label="План закрытия">${r.plan_close_date}</td>
+        <td data-label="План найма">${r.hired_count} / ${r.count} чел.</td>
+        <td data-label="Прогресс">
           <div class="progress-container">
             <div class="progress-bar-bg">
               <div class="progress-bar-fill" style="width: ${r.progress_pct}%"></div>
@@ -315,9 +317,9 @@ function renderRequisitionsTable(reqs) {
             <span class="progress-text">${r.progress_pct}%</span>
           </div>
         </td>
-        <td>${escapeHtml(r.recruiter_name || "Не назначен")}</td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
-        <td>
+        <td data-label="Рекрутер">${escapeHtml(r.recruiter_name || "Не назначен")}</td>
+        <td data-label="Статус"><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+        <td data-label="Действия">
           ${canEdit ? `<button class="btn btn-sm" onclick="editRequisition('${r.id}')">✏️ Редактировать</button>` : `<span style="font-size:0.8rem; color:var(--text-dim);">Только просмотр</span>`}
         </td>
       </tr>
@@ -487,27 +489,29 @@ function renderCandidatesTable(cands) {
 
     return `
       <tr>
-        <td>#${c.id}</td>
-        <td>
-          <a href="#" style="color:#fff; font-weight:700; text-decoration:none;" onclick="viewCandidateDetails(${c.id}); return false;">
+        <td data-label="ID">#${c.id}</td>
+        <td data-label="ФИО Кандидата">
+          <a href="#" style="font-weight:700; text-decoration:none;" onclick="viewCandidateDetails(${c.id}); return false;">
             ${escapeHtml(c.cand_name)}
           </a>
         </td>
-        <td>${escapeHtml(c.phone)}</td>
-        <td>
+        <td data-label="Телефон">
+          <a href="tel:${escapeHtml(c.phone)}" class="btn-phone-call">📞 ${escapeHtml(c.phone)}</a>
+        </td>
+        <td data-label="Должность / Заявка">
           <div style="font-weight:600;">${escapeHtml(c.title || "Должность не указана")}</div>
           <div style="font-size:0.78rem; color:var(--text-muted);">
             ${c.requisition_id ? `Заявка #${c.requisition_id}` : `<span style="color:var(--accent-amber);">Резерв</span>`}
           </div>
         </td>
-        <td>${testBadge}</td>
-        <td>
+        <td data-label="Тестирование">${testBadge}</td>
+        <td data-label="Собеседование">
           <div style="font-size:0.85rem;">${c.interview_result ? escapeHtml(c.interview_result) : '-'}</div>
           ${c.offer_date ? `<div style="font-size:0.75rem; color:var(--accent-emerald);">Оффер: ${c.offer_date}</div>` : ''}
         </td>
-        <td><span class="badge ${hiredBadge}">${escapeHtml(c.hired_status)}</span></td>
-        <td>${resumeBtn}</td>
-        <td>
+        <td data-label="Статус"><span class="badge ${hiredBadge}">${escapeHtml(c.hired_status)}</span></td>
+        <td data-label="Резюме">${resumeBtn}</td>
+        <td data-label="Действия">
           <div style="display:flex; gap:6px;">
             <button class="btn btn-sm" onclick="viewCandidateDetails(${c.id})">👁️ Карточка</button>
             <button class="btn btn-sm" onclick="openBindCandidateModal(${c.id})">🔗 Привязать</button>
