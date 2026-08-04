@@ -676,32 +676,32 @@
 
   <!-- Modal: Self Bind Telegram -->
   <div id="modalTelegram" class="modal-overlay">
-    <div class="modal-card" style="max-width:440px; border-radius:18px; overflow:hidden;">
-      <div class="modal-header" style="background:linear-gradient(135deg, #1e40af, #2563eb); color:#ffffff; padding:1.2rem 1.5rem;">
-        <h3 class="modal-title" style="color:#ffffff; display:flex; align-items:center; gap:8px; font-size:1.15rem;">
-          <span style="font-size:1.3rem;">📱</span> Привязка Telegram-бота
+    <div class="modal-card" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display:flex; align-items:center; gap:8px;">
+          <span>📱</span> Привязка Telegram-бота
         </h3>
-        <button class="modal-close" onclick="closeModal('modalTelegram')" style="color:#ffffff; opacity:0.8;">&times;</button>
+        <button class="modal-close" onclick="closeModal('modalTelegram')">&times;</button>
       </div>
-      <div class="modal-body" style="padding:1.5rem;">
-        <div style="background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18); border-radius:12px; padding:14px; font-size:0.86rem; color:#1e3a8a; margin-bottom:18px; line-height:1.5;">
-          <div style="font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span>💡</span> Как легко привязать за 10 секунд:
+      <div class="modal-body">
+        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:14px; font-size:0.88rem; color:var(--text-main); margin-bottom:18px; line-height:1.5;">
+          <div style="font-weight:700; color:var(--accent-blue); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>💡</span> Как привязать за 10 секунд:
           </div>
           1. В Telegram найдите вашего бота.<br>
           2. Отправьте ему ваш Email или напишите <b>/start</b>.<br>
           3. Бот покажет ваш <b>Chat ID</b> — вставьте его в поле ниже и нажмите <b>«Сохранить»</b>!
         </div>
         <div class="form-group">
-          <label class="form-label" for="selfTelegramChatId" style="font-weight:700;">Ваш Telegram Chat ID *</label>
-          <input type="text" id="selfTelegramChatId" class="form-control" placeholder="например: 1432197187" style="font-size:1rem; padding:12px; border-radius:10px;">
+          <label class="form-label" for="selfTelegramChatId" style="color:var(--text-main); font-weight:700;">Ваш Telegram Chat ID *</label>
+          <input type="text" id="selfTelegramChatId" class="form-control" placeholder="например: 1432197187" style="font-size:1rem; padding:12px;">
         </div>
       </div>
-      <div class="modal-footer" style="padding:1.25rem 1.5rem; background:rgba(0,0,0,0.02); display:flex; gap:10px;">
-        <button class="btn btn-primary" onclick="saveSelfTelegram()" style="flex:1; justify-content:center; padding:12px; font-weight:700; border-radius:10px; background:linear-gradient(135deg, #2563eb, #1d4ed8);">
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveSelfTelegram()" style="flex:1; justify-content:center; padding:12px; font-weight:700;">
           ⚡ Сохранить и привязать
         </button>
-        <button class="btn" onclick="closeModal('modalTelegram')" style="padding:12px 18px; border-radius:10px;">
+        <button class="btn" onclick="closeModal('modalTelegram')" style="padding:12px 18px;">
           Отмена
         </button>
       </div>
