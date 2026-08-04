@@ -15,10 +15,38 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel, Field
 
+import urllib.request
+
 # Secret key for JWT signing
 JWT_SECRET = "sag_for_people_hr_crm_jwt_secret_key_2026_super_secure"
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "sag_hr.db")
+
+# Telegram Bot Integration
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8581057434:AAEeT1h-CFJBxSPGMGXTKPJ51kTbSsjc4Gk")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "1432197187")
+
+def send_telegram_message(text: str):
+    token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", TELEGRAM_CHAT_ID)
+    if not token or not chat_id:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML"
+        }
+        req_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={'Content-Type': 'application/json'}
+        )
+        urllib.request.urlopen(req, timeout=5)
+    except Exception as e:
+        print(f"Telegram notification error: {e}")
 
 # Helper functions for JWT
 def base64url_encode(data: bytes) -> str:
@@ -685,6 +713,19 @@ def create_requisition(req: RequisitionCreate, current_user: dict = Depends(get_
     
     conn.commit()
     conn.close()
+
+    try:
+        user_name = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}".strip()
+        send_telegram_message(
+            f"📋 <b>НОВАЯ ЗАЯВКА НА ПОДБОР #{req_id}</b>\n\n"
+            f"<b>Должность:</b> {req.title}\n"
+            f"<b>Количество:</b> {req.count} чел.\n"
+            f"<b>Зарплата:</b> {req.salary or 'По договоренности'}\n"
+            f"<b>Срок закрытия:</b> {req.plan_close_date}\n"
+            f"<b>Заявитель:</b> {user_name}"
+        )
+    except Exception as e:
+        print(f"Telegram notify error: {e}")
     
     return {"message": "Заявка успешно создана", "id": req_id}
 
@@ -868,6 +909,17 @@ def create_candidate(data: CandidateCreate, current_user: dict = Depends(get_cur
 
     conn.commit()
     conn.close()
+
+    try:
+        send_telegram_message(
+            f"👤 <b>НОВЫЙ СОИСКАТЕЛЬ В БАЗЕ!</b>\n\n"
+            f"<b>ФИО:</b> {data.cand_name}\n"
+            f"<b>Телефон:</b> {data.phone}\n"
+            f"<b>Должность:</b> {req_title or 'Не указана'}\n"
+            f"<b>Заявка:</b> {f'#{data.requisition_id}' if data.requisition_id else 'Общий резерв'}"
+        )
+    except Exception as e:
+        print(f"Telegram notify error: {e}")
     
     return {"message": "Соискатель добавлен в базу", "id": cand_id}
 
